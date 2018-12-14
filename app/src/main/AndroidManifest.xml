@@ -19,13 +19,18 @@
             android:name=".ui.MainActivity"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateHidden|adjustPan">
+
+        </activity>
+
+        <activity
+            android:name=".ui.Main2Activity"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
