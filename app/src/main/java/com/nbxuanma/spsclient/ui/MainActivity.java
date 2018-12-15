@@ -1,6 +1,9 @@
 package com.nbxuanma.spsclient.ui;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -10,25 +13,16 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.JsonHttpResponseHandler;
+import com.nbxuanma.spsclient.ClientThread;
+import com.nbxuanma.spsclient.MyServer;
 import com.nbxuanma.spsclient.R;
 import com.nbxuanma.spsclient.statusbar.StatusBarUtil;
-import com.nbxuanma.spsclient.utils.JsonParse;
 
-import org.apache.http.Header;
-import org.json.JSONArray;
-
-import app.socketlib.com.library.ContentServiceHelper;
-import app.socketlib.com.library.listener.SocketResponseListener;
-import app.socketlib.com.library.socket.SessionManager;
-import app.socketlib.com.library.socket.SocketConfig;
-import app.socketlib.com.library.utils.Contants;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity implements SocketResponseListener {
+public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.Re_title)
     RelativeLayout ReTitle;
@@ -69,9 +63,8 @@ public class MainActivity extends AppCompatActivity implements SocketResponseLis
     @BindView(R.id.Re_right)
     RelativeLayout ReRight;
 
-    private static final String HOST = "119.3.58.181";
-    private static final int PORT = 8085;
-    private String token = "", url = "";
+    private ClientThread clientThread;
+    private MyServer server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,66 +72,45 @@ public class MainActivity extends AppCompatActivity implements SocketResponseLis
         setContentView(R.layout.ac_main);
         ButterKnife.bind(this);
         StatusBarUtil.setTranslucent(this);
-        SocketConfig socketConfig = new SocketConfig.Builder(getApplicationContext())
-                .setIp(HOST)//ip
-                .setPort(PORT)//端口
-                .setReadBufferSize(10240)//readBuffer
-                .setIdleTimeOut(30)//客户端空闲时间,客户端在超过此时间内不向服务器发送数据,则视为idle状态,则进入心跳状态
-                .setTimeOutCheckInterval(10)//客户端连接超时时间,超过此时间则视为连接超时
-                .setRequestInterval(10)//请求超时间隔时间
-                .setHeartbeatRequest("(1,1)\r\n")//与服务端约定的发送过去的心跳包
-                .setHeartbeatResponse("(10,10)\r\n") //与服务端约定的接收到的心跳包
-                .builder();
-        ContentServiceHelper.bindService(this, socketConfig);
-        SessionManager.getInstance().setReceivedResponseListener(this);
+        clientThread = new ClientThread(handler);
+        new Thread(clientThread).start();
+//        server = new MyServer();
     }
 
     @OnClick({R.id.btn_free, R.id.btn_toll})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_free:
-
+                Log.i("TAG", "btn_free:");
+                Send("M,浙B11111");
                 break;
             case R.id.btn_toll:
-
+                Log.i("TAG", "btn_toll:");
+                Send("8888");
                 break;
         }
     }
 
-    @Override
-    public void socketMessageReceived(String msg) {
-        Log.i("TAG", "OnReceiveMsg:" + msg);
+    //用于发送接收到的服务端的消息，显示在界面上
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            Log.e("TAG", msg.obj.toString());
+
+        }
+    };
+
+    public void Send(final String str) {
+        Message msg = new Message();
+        msg.what = 0;
+        msg.obj = str.trim();
+        clientThread.revHandler.sendMessage(msg);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ContentServiceHelper.unBindService(this);
-    }
-
-    private void getData() {
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.addHeader("Authorization", token);
-        client.get(url, new JsonHttpResponseHandler() {
-
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                super.onSuccess(statusCode, headers, response);
-                Log.e("Tag", "----->" + response.toString());
-                int code = JsonParse.getStatus(response.toString());
-                if (code == 1) {
-
-                } else {
-                    //获取数据失败
-                }
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONArray errorResponse) {
-                super.onFailure(statusCode, headers, throwable, errorResponse);
-            }
-        });
-
     }
 
 }

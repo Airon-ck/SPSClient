@@ -1,117 +1,82 @@
 package com.nbxuanma.spsclient;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-
+import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
-import android.widget.EditText;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 
 public class ClientThread implements Runnable {
-    //For debug
-    private final String TAG = "ClientThread";
 
+    private static final String TAG = "TAG";
+    private OutputStream os;
+    private BufferedReader br;
     private Socket socket;
-    private String ip;
-    private int port;
-    private Handler receiveHandler;
-    public Handler sendHandler;
-    BufferedReader bufferedReader;
-    private InputStream inputStream;
-    private OutputStream outputStream;
-    public boolean isConnect = false;
 
-    public ClientThread(Handler handler, String ip, String port) {
-        // TODO Auto-generated constructor stub
-        this.receiveHandler = handler;
-        this.ip = ip;
-        this.port = Integer.valueOf(port);
-        Log.d(TAG, "ClientThread's construct is OK!!");
+    //用于向UI发送消息
+    private Handler handler;
+    //接收UI线程的消息（当用户点击发送）
+    public Handler revHandler;
+
+    public ClientThread(Handler handler) {
+        this.handler = handler;
     }
 
-    public ClientThread() {
-        Log.d(TAG, "It is may be construct's problem...");
-    }
-
+    @SuppressLint("HandlerLeak")
+    @Override
     public void run() {
+        //创建一个无连接的Socket
+        socket = new Socket();
         try {
-            Log.d(TAG, "Into the run()");
-            socket = new Socket(ip, port);
-            isConnect = socket.isConnected();
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
+            //连接到指定的IP和端口号，并指定10s的超时时间
+            socket.connect(new InetSocketAddress("119.3.58.181", 8085), 10000);
+            //接收服务端的数据
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
+            //向服务端发送数据
+            os = socket.getOutputStream();
 
-            //To monitor if receive Msg from Server
-            new Thread() {
+            //读取数据会阻塞，所以创建一个线程来读取
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    byte[] buffer = new byte[1024];
-
-                    final StringBuilder stringBuilder = new StringBuilder();
+                    //接收服务器的消息，发送显示在主界面
+                    String content;
                     try {
-                        while (socket.isConnected()) {
-                            int readSize = inputStream.read(buffer);
-                            Log.d(TAG, "readSize:" + readSize);
-
-                            //If Server is stopping
-                            if (readSize == -1) {
-                                inputStream.close();
-                                outputStream.close();
-
-                            }
-                            if (readSize == 0) continue;
-                            //Update the receive editText
-                            stringBuilder.append(new String(buffer, 0, readSize));
+                        while ((content = br.readLine()) != null) {
                             Message msg = new Message();
-                            msg.what = 0x123;
-                            msg.obj = stringBuilder.toString();
-                            receiveHandler.sendMessage(msg);
+                            msg.what = 1;
+                            msg.obj = content;
+                            handler.sendMessage(msg);
                         }
                     } catch (IOException e) {
-                        Log.d(TAG, e.getMessage());
                         e.printStackTrace();
                     }
                 }
+            }).start();
 
-            }.start();
-
-            //To Send Msg to Server
+            //非UI线程，自己创建
             Looper.prepare();
-            sendHandler = new Handler() {
+            revHandler = new Handler() {
                 @Override
                 public void handleMessage(Message msg) {
-                    if (msg.what == 0x852) {
-                        try {
-                            outputStream.write((msg.obj.toString() + "\r\n").getBytes());
-                            outputStream.flush();
-                        } catch (Exception e) {
-                            Log.d(TAG, e.getMessage());
-                            e.printStackTrace();
-                        }
+                    //将用户输入的内容写入到服务器
+                    try {
+                        os.write(((msg.obj) + "\n").getBytes("utf-8"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             };
             Looper.loop();
-
-        } catch (SocketTimeoutException e) {
-            // TODO Auto-generated catch block
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
-            Log.d(TAG, e.getMessage());
-            e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            Log.d(TAG, e.getMessage());
             e.printStackTrace();
         }
     }
+
 }
