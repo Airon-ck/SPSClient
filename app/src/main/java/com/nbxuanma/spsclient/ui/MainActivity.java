@@ -1,6 +1,7 @@
 package com.nbxuanma.spsclient.ui;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,14 +14,14 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.nbxuanma.spsclient.ClientThread;
-import com.nbxuanma.spsclient.MyServer;
 import com.nbxuanma.spsclient.R;
+import com.nbxuanma.spsclient.client.ClientThread;
+import com.nbxuanma.spsclient.server.MyServer;
 import com.nbxuanma.spsclient.statusbar.StatusBarUtil;
+import com.nbxuanma.spsclient.utils.PerfectClickListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     TextView txtStatus;
     @BindView(R.id.Re_right)
     RelativeLayout ReRight;
+    @BindView(R.id.txt_setting)
+    TextView txtSetting;
 
     private ClientThread clientThread;
     private MyServer server;
@@ -74,21 +77,29 @@ public class MainActivity extends AppCompatActivity {
         StatusBarUtil.setTranslucent(this);
         clientThread = new ClientThread(handler);
         new Thread(clientThread).start();
-//        server = new MyServer();
-    }
-
-    @OnClick({R.id.btn_free, R.id.btn_toll})
-    public void onViewClicked(View view) {
-        switch (view.getId()) {
-            case R.id.btn_free:
+        btnFree.setOnClickListener(new PerfectClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
                 Log.i("TAG", "btn_free:");
                 Send("M,浙B11111");
-                break;
-            case R.id.btn_toll:
+            }
+        });
+        btnToll.setOnClickListener(new PerfectClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
                 Log.i("TAG", "btn_toll:");
                 Send("8888");
-                break;
-        }
+            }
+        });
+        txtSetting.setOnClickListener(new PerfectClickListener() {
+            @Override
+            protected void onNoDoubleClick(View view) {
+                Intent intent=new Intent();
+                intent.setClass(MainActivity.this,SettingActivity.class);
+                MainActivity.this.startActivity(intent);
+            }
+        });
+        server = new MyServer();
     }
 
     //用于发送接收到的服务端的消息，显示在界面上
@@ -102,10 +113,16 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void Send(final String str) {
-        Message msg = new Message();
-        msg.what = 0;
-        msg.obj = str.trim();
-        clientThread.revHandler.sendMessage(msg);
+
+        new Handler().postDelayed(new Runnable() {
+            public void run() {
+                Message msg = new Message();
+                msg.what = 0;
+                msg.obj = str.trim();
+                clientThread.revHandler.sendMessage(msg);
+            }
+        }, 0);
+
     }
 
     @Override

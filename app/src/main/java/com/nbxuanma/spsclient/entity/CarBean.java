@@ -1,6 +1,8 @@
 package com.nbxuanma.spsclient.entity;
 
-public class CarBean {
+import java.io.Serializable;
+
+public class CarBean implements Serializable {
 
     private int Status;
     private ResultBean Result;
@@ -21,7 +23,7 @@ public class CarBean {
         this.Result = Result;
     }
 
-    public static class ResultBean {
+    public static class ResultBean implements Serializable {
 
         private String license;//车牌
         private String admissiontime;//入场时间

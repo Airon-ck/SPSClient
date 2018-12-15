@@ -1,4 +1,4 @@
-package com.nbxuanma.spsclient;
+package com.nbxuanma.spsclient.server;
 
 
 import android.util.Log;
@@ -6,10 +6,8 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.util.Iterator;
 
 public class ServerThread implements Runnable {
 

@@ -1,9 +1,10 @@
-package com.nbxuanma.spsclient;
+package com.nbxuanma.spsclient.client;
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +24,7 @@ public class ClientThread implements Runnable {
     private Handler handler;
     //接收UI线程的消息（当用户点击发送）
     public Handler revHandler;
+    boolean isConnect;
 
     public ClientThread(Handler handler) {
         this.handler = handler;
@@ -40,7 +42,8 @@ public class ClientThread implements Runnable {
             br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
             //向服务端发送数据
             os = socket.getOutputStream();
-
+            isConnect = socket.isConnected();
+            Log.i(TAG, "isConnect:" + isConnect);
             //读取数据会阻塞，所以创建一个线程来读取
             new Thread(new Runnable() {
                 @Override
@@ -53,6 +56,7 @@ public class ClientThread implements Runnable {
                             msg.what = 1;
                             msg.obj = content;
                             handler.sendMessage(msg);
+                            Log.i(TAG, "ReadFromServer");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -68,6 +72,7 @@ public class ClientThread implements Runnable {
                     //将用户输入的内容写入到服务器
                     try {
                         os.write(((msg.obj) + "\n").getBytes("utf-8"));
+                        Log.i(TAG, "WriteToServer");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

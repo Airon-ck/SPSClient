@@ -1,4 +1,4 @@
-package com.nbxuanma.spsclient;
+package com.nbxuanma.spsclient.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
