@@ -25,6 +25,11 @@
         <activity
             android:name=".ui.Main2Activity"
             android:screenOrientation="landscape">
+
+        </activity>
+
+        <activity android:name=".ui.Main3Activity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
