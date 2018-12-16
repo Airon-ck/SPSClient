@@ -1,6 +1,7 @@
 package com.nbxuanma.spsclient.ui;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,11 +15,20 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.google.gson.Gson;
 import com.nbxuanma.spsclient.R;
 import com.nbxuanma.spsclient.client.ClientThread;
+import com.nbxuanma.spsclient.entity.CarBean;
 import com.nbxuanma.spsclient.server.MyServer;
 import com.nbxuanma.spsclient.statusbar.StatusBarUtil;
+import com.nbxuanma.spsclient.utils.Config;
+import com.nbxuanma.spsclient.utils.MyEventBus;
 import com.nbxuanma.spsclient.utils.PerfectClickListener;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,9 +75,16 @@ public class MainActivity extends AppCompatActivity {
     RelativeLayout ReRight;
     @BindView(R.id.txt_setting)
     TextView txtSetting;
+    @BindView(R.id.iv_modify)
+    ImageView ivModify;
+    @BindView(R.id.Re_license)
+    RelativeLayout ReLicense;
 
+    private static final String TAG = "TAG";
+    private Activity activity;
     private ClientThread clientThread;
     private MyServer server;
+    private boolean IsFree = false, IsToll = false, IsModify = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,27 +92,33 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.ac_main);
         ButterKnife.bind(this);
         StatusBarUtil.setTranslucent(this);
-        clientThread = new ClientThread(handler);
-        new Thread(clientThread).start();
+        EventBus.getDefault().register(this);
+        activity = this;
         btnFree.setOnClickListener(new PerfectClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                Log.i("TAG", "btn_free:");
-                Send("M,浙B11111");
+                IsFree = true;
+                Send("浙B11111", 0);
             }
         });
         btnToll.setOnClickListener(new PerfectClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                Log.i("TAG", "btn_toll:");
-                Send("8888");
+                IsToll = true;
+                Send("浙B11111", 1);
+            }
+        });
+        ivModify.setOnClickListener(new PerfectClickListener() {
+            @Override
+            protected void onNoDoubleClick(View View) {
+                Send("浙B11111", 2);
             }
         });
         txtSetting.setOnClickListener(new PerfectClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                Intent intent=new Intent();
-                intent.setClass(MainActivity.this,SettingActivity.class);
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, SettingActivity.class);
                 MainActivity.this.startActivity(intent);
             }
         });
@@ -105,29 +128,77 @@ public class MainActivity extends AppCompatActivity {
     //用于发送接收到的服务端的消息，显示在界面上
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
+        @SuppressLint("SetTextI18n")
         @Override
         public void handleMessage(Message msg) {
-            Log.e("TAG", msg.obj.toString());
-
+            switch (msg.what) {
+                case 1:
+                    Log.e("TAG", msg.obj.toString());
+                    if (msg.obj.toString().equals("OK")) {
+                        if (IsFree) {
+                            btnFree.setBackgroundColor(getResources().getColor(R.color.colorE6E6E6));
+                        }
+                        if (IsToll) {
+                            btnToll.setBackgroundColor(getResources().getColor(R.color.colorE6E6E6));
+                        }
+//                        btnFree.setClickable(false);
+//                        btnToll.setClickable(false);
+                    }
+                    break;
+            }
         }
     };
 
-    public void Send(final String str) {
-
+    public void Send(final String str, final int type) {
+        clientThread = new ClientThread(activity, handler);
+        new Thread(clientThread).start();
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 Message msg = new Message();
                 msg.what = 0;
-                msg.obj = str.trim();
+                switch (type) {
+                    case 0://免费
+                        msg.obj = "M," + str.trim();
+                        break;
+                    case 1://收费
+                        msg.obj = "C," + str.trim();
+                        break;
+                    case 2://修改车牌
+                        msg.obj = "U," + str.trim();
+                        break;
+                }
+                Log.i(TAG, "msg.obj:" + msg.obj);
                 clientThread.revHandler.sendMessage(msg);
             }
-        }, 0);
+        }, 100);
 
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void EventBus(MyEventBus message) {
+        if (message.tag == Config.ReceiveMsg) {
+            btnFree.setClickable(true);
+            btnFree.setBackgroundColor(getResources().getColor(R.color.color139b17));
+            btnToll.setClickable(true);
+            btnToll.setBackgroundColor(getResources().getColor(R.color.colorf5303d));
+            String content = message.bundle.getString("content");
+            CarBean bean = new Gson().fromJson(content, CarBean.class);
+            CarBean.ResultBean entity = bean.getResult();
+            etLicense.setText(entity.getLicense());
+            Glide.with(activity).load(entity.getImgcar()).into(ivCar);
+            txtStatus.setText(entity.getStatus());
+            txtAdmissionTime.setText(entity.getAdmissiontime());
+            txtPlayingTime.setText(entity.getPlayingtime());
+            txtParkingTime.setText(entity.getParkingtime());
+            txtOrderAmount.setText("￥" + entity.getOrderamount());
+            txtPaid.setText("￥" + entity.getPaid());
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 
 }

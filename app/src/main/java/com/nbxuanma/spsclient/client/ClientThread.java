@@ -1,6 +1,9 @@
 package com.nbxuanma.spsclient.client;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -24,9 +27,12 @@ public class ClientThread implements Runnable {
     private Handler handler;
     //接收UI线程的消息（当用户点击发送）
     public Handler revHandler;
-    boolean isConnect;
+    private boolean isConnect;
 
-    public ClientThread(Handler handler) {
+    private Activity activity;
+
+    public ClientThread(Activity activity, Handler handler) {
+        this.activity = activity;
         this.handler = handler;
     }
 
@@ -36,8 +42,11 @@ public class ClientThread implements Runnable {
         //创建一个无连接的Socket
         socket = new Socket();
         try {
+            SharedPreferences sp = activity.getSharedPreferences("User", Context.MODE_PRIVATE);
+            String Host = sp.getString("IP", "119.3.58.181");
+            int Port = sp.getInt("Port", 8085);
             //连接到指定的IP和端口号，并指定10s的超时时间
-            socket.connect(new InetSocketAddress("119.3.58.181", 8085), 10000);
+            socket.connect(new InetSocketAddress(Host, Port), 10000);
             //接收服务端的数据
             br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
             //向服务端发送数据
@@ -71,8 +80,10 @@ public class ClientThread implements Runnable {
                 public void handleMessage(Message msg) {
                     //将用户输入的内容写入到服务器
                     try {
-                        os.write(((msg.obj) + "\n").getBytes("utf-8"));
-                        Log.i(TAG, "WriteToServer");
+                        if (isConnect){
+                            os.write(((msg.obj) + "\n").getBytes("utf-8"));
+                            Log.i(TAG, "WriteToServer");
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

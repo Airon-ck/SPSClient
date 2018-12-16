@@ -32,6 +32,7 @@ public class CarBean implements Serializable {
         private double orderamount;//订单金额
         private double paid;//已缴费用
         private String Imgcar;//出道口图片
+        private String status;//状态
 
         public String getLicense() {
             return license;
@@ -87,6 +88,14 @@ public class CarBean implements Serializable {
 
         public void setImgcar(String imgcar) {
             Imgcar = imgcar;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
         }
 
     }

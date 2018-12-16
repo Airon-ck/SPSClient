@@ -1,16 +1,26 @@
 package com.nbxuanma.spsclient.server;
 
 
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+
+import com.nbxuanma.spsclient.utils.Config;
+import com.nbxuanma.spsclient.utils.MyEventBus;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class ServerThread implements Runnable {
 
+    private static final String TAG = "TAG";
     private Socket socket;
     private BufferedReader br;
 
@@ -25,13 +35,17 @@ public class ServerThread implements Runnable {
         //不断把客服端的数据读取出来
         while ((content = readFromClient()) != null) {
 
-            String str = null;
+            String str = "";
             try {
-                str = String.valueOf((content + "\n").getBytes("utf-8"));
+                str = Arrays.toString(content.getBytes("utf-8"));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            Log.i("tag", str);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("content", str);
+            EventBus.getDefault().post(new MyEventBus(Config.ReceiveMsg, bundle));
+            Log.i(TAG, "ReadMsgFromServer");
 
 //            //把收到的消息遍历发给每一个连接了的客户端
 //            for (Iterator<Socket> iterator = MyServer.listSocket.iterator(); iterator.hasNext(); ) {
