@@ -21,6 +21,7 @@ import com.nbxuanma.spsclient.R;
 import com.nbxuanma.spsclient.client.ClientThread;
 import com.nbxuanma.spsclient.entity.CarBean;
 import com.nbxuanma.spsclient.server.MyServer;
+import com.nbxuanma.spsclient.server.WebServer;
 import com.nbxuanma.spsclient.statusbar.StatusBarUtil;
 import com.nbxuanma.spsclient.utils.Config;
 import com.nbxuanma.spsclient.utils.MyEventBus;
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "TAG";
     private Activity activity;
     private ClientThread clientThread;
-    private MyServer server;
+    private WebServer server;
     private boolean IsFree = false, IsToll = false, IsModify = false;
 
     @Override
@@ -122,7 +123,13 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.startActivity(intent);
             }
         });
-        server = new MyServer();
+        new Thread(){
+            public void run(){
+                server = new WebServer();
+                server.start();
+            }
+        }.start();
+
     }
 
     //用于发送接收到的服务端的消息，显示在界面上
