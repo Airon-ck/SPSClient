@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
@@ -30,6 +31,8 @@ import com.nbxuanma.spsclient.utils.PerfectClickListener;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.text.DecimalFormat;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -123,8 +126,8 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.startActivity(intent);
             }
         });
-        new Thread(){
-            public void run(){
+        new Thread() {
+            public void run() {
                 server = new WebServer();
                 server.start();
             }
@@ -150,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
                         }
 //                        btnFree.setClickable(false);
 //                        btnToll.setClickable(false);
+                    } else if (msg.obj.equals("ERR")) {
+                        Toast.makeText(activity, "ERR", Toast.LENGTH_LONG).show();
                     }
                     break;
             }
@@ -177,10 +182,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "msg.obj:" + msg.obj);
                 clientThread.revHandler.sendMessage(msg);
             }
-        }, 100);
+        }, 150);
 
     }
 
+    @SuppressLint("SetTextI18n")
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void EventBus(MyEventBus message) {
         if (message.tag == Config.ReceiveMsg) {
@@ -197,8 +203,9 @@ public class MainActivity extends AppCompatActivity {
             txtAdmissionTime.setText(entity.getAdmissiontime());
             txtPlayingTime.setText(entity.getPlayingtime());
             txtParkingTime.setText(entity.getParkingtime());
-            txtOrderAmount.setText("￥" + entity.getOrderamount());
-            txtPaid.setText("￥" + entity.getPaid());
+            DecimalFormat df = new DecimalFormat("#.00");
+            txtOrderAmount.setText("￥" + df.format(entity.getOrderamount()));
+            txtPaid.setText("￥" + df.format(entity.getPaid()));
         }
     }
 
