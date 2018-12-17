@@ -38,7 +38,9 @@ public class SettingActivity extends AppCompatActivity {
         StatusBarUtil.setTranslucent(this);
         sp=getSharedPreferences("User",MODE_PRIVATE);
         edIp.setHint(sp.getString("IP","119.3.58.181"));
+        edIp.setText(sp.getString("IP","119.3.58.181"));
         edPort.setHint(String.valueOf(sp.getInt("Port",8085)));
+        edPort.setText(String.valueOf(sp.getInt("Port",8085)));
         editor = sp.edit();
         bnSet.setOnClickListener(new PerfectClickListener() {
             @Override

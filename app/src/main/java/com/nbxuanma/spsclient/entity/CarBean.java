@@ -1,11 +1,74 @@
 package com.nbxuanma.spsclient.entity;
 
-import java.io.Serializable;
+public class CarBean {
 
-public class CarBean implements Serializable {
+    /**
+     * License : 浙B12345
+     * Admissiontime : 2018-12-17 10:36:01
+     * Playingtime : 2018-12-17 11:41:41
+     * Parkingtime : 01小时05分
+     * Orderamount : 0.10
+     * Paid : 0
+     * Status : 0
+     * Imgcar : null
+     */
 
+    private String License;
+    private String Admissiontime;
+    private String Playingtime;
+    private String Parkingtime;
+    private String Orderamount;
+    private String Paid;
     private int Status;
-    private ResultBean Result;
+    private String Imgcar;
+
+    public String getLicense() {
+        return License;
+    }
+
+    public void setLicense(String License) {
+        this.License = License;
+    }
+
+    public String getAdmissiontime() {
+        return Admissiontime;
+    }
+
+    public void setAdmissiontime(String Admissiontime) {
+        this.Admissiontime = Admissiontime;
+    }
+
+    public String getPlayingtime() {
+        return Playingtime;
+    }
+
+    public void setPlayingtime(String Playingtime) {
+        this.Playingtime = Playingtime;
+    }
+
+    public String getParkingtime() {
+        return Parkingtime;
+    }
+
+    public void setParkingtime(String Parkingtime) {
+        this.Parkingtime = Parkingtime;
+    }
+
+    public String getOrderamount() {
+        return Orderamount;
+    }
+
+    public void setOrderamount(String Orderamount) {
+        this.Orderamount = Orderamount;
+    }
+
+    public String getPaid() {
+        return Paid;
+    }
+
+    public void setPaid(String Paid) {
+        this.Paid = Paid;
+    }
 
     public int getStatus() {
         return Status;
@@ -15,89 +78,12 @@ public class CarBean implements Serializable {
         this.Status = Status;
     }
 
-    public ResultBean getResult() {
-        return Result;
+    public String getImgcar() {
+        return Imgcar;
     }
 
-    public void setResult(ResultBean Result) {
-        this.Result = Result;
-    }
-
-    public static class ResultBean implements Serializable {
-
-        private String license;//车牌
-        private String admissiontime;//入场时间
-        private String playingtime;//出场时间
-        private String parkingtime;//停车时长
-        private double orderamount;//订单金额
-        private double paid;//已缴费用
-        private String Imgcar;//出道口图片
-        private String status;//状态
-
-        public String getLicense() {
-            return license;
-        }
-
-        public void setLicense(String license) {
-            this.license = license;
-        }
-
-        public String getAdmissiontime() {
-            return admissiontime;
-        }
-
-        public void setAdmissiontime(String admissiontime) {
-            this.admissiontime = admissiontime;
-        }
-
-        public String getPlayingtime() {
-            return playingtime;
-        }
-
-        public void setPlayingtime(String playingtime) {
-            this.playingtime = playingtime;
-        }
-
-        public String getParkingtime() {
-            return parkingtime;
-        }
-
-        public void setParkingtime(String parkingtime) {
-            this.parkingtime = parkingtime;
-        }
-
-        public double getOrderamount() {
-            return orderamount;
-        }
-
-        public void setOrderamount(double orderamount) {
-            this.orderamount = orderamount;
-        }
-
-        public double getPaid() {
-            return paid;
-        }
-
-        public void setPaid(double paid) {
-            this.paid = paid;
-        }
-
-        public String getImgcar() {
-            return Imgcar;
-        }
-
-        public void setImgcar(String imgcar) {
-            Imgcar = imgcar;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-
+    public void setImgcar(String Imgcar) {
+        this.Imgcar = Imgcar;
     }
 
 }

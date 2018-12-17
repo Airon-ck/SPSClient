@@ -14,9 +14,7 @@ import org.greenrobot.eventbus.EventBus;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class ServerThread implements Runnable {
 
@@ -35,15 +33,8 @@ public class ServerThread implements Runnable {
         //不断把客服端的数据读取出来
         while ((content = readFromClient()) != null) {
 
-            String str = "";
-            try {
-                str = Arrays.toString(content.getBytes("utf-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-
             Bundle bundle = new Bundle();
-            bundle.putString("content", str);
+            bundle.putString("content", content);
             EventBus.getDefault().post(new MyEventBus(Config.ReceiveMsg, bundle));
             Log.i(TAG, "ReadMsgFromServer");
 
@@ -68,7 +59,7 @@ public class ServerThread implements Runnable {
             return br.readLine();
         } catch (IOException e) {
             e.printStackTrace();
-            MyServer.listSocket.remove(socket);
+            WebServer.listSocket.remove(socket);
         }
         return null;
     }
