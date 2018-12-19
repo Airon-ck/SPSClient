@@ -17,5 +17,7 @@
     <color name="colorThreeC">#cccccc</color>
     <color name="colorc8161d">#c8161d</color>
     <color name="colorc7cfd6">#c7cfd6</color>
+    <color name="colorForAcitivityBg">#f4f4f4</color>
+    <color name="colorBD">#bdbdbd</color>
 
 </resources>

@@ -2,10 +2,12 @@ package com.nbxuanma.spsclient.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.os.Bundle;
@@ -44,6 +46,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 
 import butterknife.BindView;
@@ -127,8 +130,13 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
     TextView txtPrompt;
     @BindView(R.id.Re_origin)
     RelativeLayout ReOrigin;
+    @BindView(R.id.lin_newcar)
+    LinearLayout linNewcar;
+    @BindView(R.id.txt_plus)
+    TextView txtPlus;
 
     private static final String TAG = "TAG";
+
     private Activity activity;
     private ClientThread clientThread;
     private WebServer server;
@@ -142,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
     KeyboardHandle keyboardHandle = null;
     private EditText mEtEight = null;
     private EditText mEtCarnum[] = new EditText[8];
-    private boolean CanModify = false;
+    private boolean CanModify = false, IsNewCar = false;
     private String License = "";
 
     @Override
@@ -199,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
                 ReEdit.setVisibility(View.VISIBLE);
                 ReOrigin.setVisibility(View.INVISIBLE);
                 for (int i = 0; i < License.length(); i++) {
+                    mEtCarnum[i].setVisibility(View.VISIBLE);
                     mEtCarnum[i].setText(License.substring(i, i + 1));
                 }
             }
@@ -233,15 +242,7 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
         txtSetting.setOnClickListener(new PerfectClickListener() {
             @Override
             protected void onNoDoubleClick(View view) {
-                DialogBuild.showCustom(view, "确定进入设置界面修改IP和Port，这将会影响运作！", "确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                        Intent intent = new Intent();
-                        intent.setClass(MainActivity.this, SettingActivity.class);
-                        MainActivity.this.startActivity(intent);
-                    }
-                });
+                ShowAlerDialog();
             }
         });
         keySure.setOnClickListener(new PerfectClickListener() {
@@ -254,6 +255,63 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
                 Log.i(TAG, "KeyContent:" + keyboardHandle.getContent());
             }
         });
+        linNewcar.setOnClickListener(new PerfectClickListener() {
+            @Override
+            protected void onNoDoubleClick(View v) {
+                if (!IsNewCar) {
+                    etEight.setVisibility(View.VISIBLE);
+                    txtPlus.setText(" - 新能源");
+                    txtPlus.setTextColor(getResources().getColor(R.color.colorf5303d));
+                } else {
+                    etEight.setVisibility(View.GONE);
+                    txtPlus.setText(" + 新能源");
+                    txtPlus.setTextColor(getResources().getColor(R.color.colorBD));
+                }
+                IsNewCar = !IsNewCar;
+                Log.i(TAG, "length:" + keyboardHandle.getContent().length());
+            }
+        });
+    }
+
+    private void ShowAlerDialog() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("提醒")
+                .setMessage("确定进入设置界面修改IP和Port，这将会影响运作！")
+                .setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Intent intent = new Intent();
+                        intent.setClass(MainActivity.this, SettingActivity.class);
+                        MainActivity.this.startActivity(intent);
+                    }
+                })
+                .create();
+        dialog.show();
+        try {
+            Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
+            mAlert.setAccessible(true);
+            Object mAlertController = mAlert.get(dialog);
+            Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
+            mMessage.setAccessible(true);
+            TextView mMessageView = (TextView) mMessage.get(mAlertController);
+            mMessageView.setTextSize(28);
+            mMessageView.setTextColor(getResources().getColor(R.color.color333333));
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED);
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextSize(22);
+            dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setTextColor(Color.BLUE);
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextSize(22);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -317,8 +375,6 @@ public class MainActivity extends AppCompatActivity implements HideCallback, Sho
             String content = message.bundle.getString("content");
             Log.i(TAG, "content:" + content);
             CarBean bean = new Gson().fromJson(content, CarBean.class);
-            etLicense.setText(bean.getLicense());
-            etEight.setVisibility(bean.getLicense().length() == 8 ? View.VISIBLE : View.GONE);
             License = bean.getLicense();
             etLicense.setText(License);
             if (!bean.getImgcar().isEmpty()) {
